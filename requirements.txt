@@ -15,7 +15,7 @@ python-dotenv==1.0.1
 requests==2.32.4
 SQLAlchemy==2.0.37
 streamlit==1.43.1
-torch==2.7.1+cu118
+torch==2.7.1
 transformers==4.53.1
 typing_extensions==4.14.1
 validators==0.28.1
