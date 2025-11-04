@@ -48,7 +48,7 @@ st.markdown("<hr style='margin: 15px 0;'>", unsafe_allow_html=True)
 # Get the input model name from user
 col1, col2, col3= st.columns([1, 1, 1])
 with col1:
-    model = st.selectbox("***Model***", ["Stable Diffusion v1.5","Dreamlike Photoreal 2.0"])
+    model = st.selectbox("***Model***", ["Stable Diffusion v1.5"])
 
 
 with col2:
@@ -71,18 +71,21 @@ with col2:
     summarize_clicked = st.button("Generate")
 
 model_map = {
-    "Stable Diffusion v1.5": "runwayml/stable-diffusion-v1-5",
-    "Dreamlike Photoreal 2.0": "dreamlike-art/dreamlike-photoreal-2.0",
-}
+    "Stable Diffusion v1.5": "runwayml/stable-diffusion-v1-5" }
 #---------------------------------------------------------------------------------------------------------------
-# Cache Model Loading for faster reloads
 @st.cache_resource
 def load_pipeline(model_id, device):
-    pipe = StableDiffusionPipeline.from_pretrained(
-        model_id,
-        torch_dtype = torch.float16 if device=="cuda" else torch.float32
-    )
-    return pipe.to(device)
+    dtype = torch.float16 if device == "cuda" else torch.float32
+    try:
+        pipe = StableDiffusionPipeline.from_pretrained(
+            model_id,
+            torch_dtype=dtype,
+            low_cpu_mem_usage=True
+        )
+        return pipe.to(device)
+    except Exception as e:
+        st.error(f"⚠️ Failed to load model due to memory overload in streamlit cloud..")
+        return None
 
 #---------------------------------------------------------------------------------------------------------------
                                 # Model Pipeline
@@ -110,7 +113,7 @@ if summarize_clicked and User_Prompt.strip():
         st.write(f"Running on: {device.upper()}")
         pipe = load_pipeline(model_id, device)
         params = {
-            "num_inference_steps": 30,
+            "num_inference_steps": 20,
             "num_images_per_prompt": Number_of_Images
         }
         generate_images(pipe, User_Prompt, params)
