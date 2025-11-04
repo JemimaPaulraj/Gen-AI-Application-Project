@@ -96,7 +96,13 @@ def generate_images(pipe, prompt, params):
 if summarize_clicked and User_Prompt.strip():
     with st.spinner("Generating Images..."):
         model_id = model_map[model]
-        pipe = StableDiffusionPipeline.from_pretrained( model_id, torch_dtype=torch.float16).to("cuda")
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        st.write(f"Running on: {device.upper()}")
+        pipe = StableDiffusionPipeline.from_pretrained(
+        model_id, 
+        torch_dtype=torch.float16 if device=="cuda" else torch.float32
+        )
+        pipe = pipe.to(device)
         params = {
             "num_inference_steps": 50,
             "num_images_per_prompt": Number_of_Images

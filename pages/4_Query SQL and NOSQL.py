@@ -1,11 +1,20 @@
+#========================================================== 
+# 🚀 Query SQL and NOSQL
+# ==========================================================
+
+import os 
+from dotenv import load_dotenv 
+load_dotenv()
+
+# API keys
+os.environ['OPENAI_API_KEY'] = os.getenv("OPENAI_API_KEY")
+
 # --------------------------Import Libraries---------------------------------
 import streamlit as st
 from pathlib import Path
 import sqlite3
 import pandas as pd
-import os
 from sqlalchemy import create_engine
-
 from langchain.agents import create_sql_agent
 from langchain.sql_database import SQLDatabase
 from langchain.agents.agent_types import AgentType
@@ -15,9 +24,13 @@ from langchain_experimental.agents.agent_toolkits import create_pandas_dataframe
 from langchain.chat_models import ChatOpenAI
 from pymongo import MongoClient
 from langchain.schema import SystemMessage,HumanMessage
+from tabulate import tabulate
 
-# ----------------------------Set OpenAI API Key--------------------------------------
-os.environ['OPENAI_API_KEY'] = os.getenv("OPENAI_API_KEY")
+db = None
+collection = None
+df = None
+agent = None
+toolkit = None
 
 # ----------------------------------------------------------
 # Streamlit User Interface
@@ -70,7 +83,7 @@ st.markdown('<div class="custom-heading"> Query SQL and NOSQL Database</div>', u
 radio_opt = ["Connect to MySQL Database", "Connect to SQLite Database", "Connect to MongoDB Database", "Connect to Excel/CSV"]
 selected_opt = st.sidebar.radio("Choose the DB you want to chat with:", options=radio_opt)
 
-# Sidebar credentials
+# Sidebar credentials    
 if radio_opt.index(selected_opt) == 0:  # MySQL
     db_uri = "USE_MYSQL"
     mysql_host = st.sidebar.text_input("Enter MySQL Host:")
@@ -79,6 +92,7 @@ if radio_opt.index(selected_opt) == 0:  # MySQL
     mysql_db = st.sidebar.text_input("Database Name:")
 elif radio_opt.index(selected_opt) == 1:  # SQLite
     db_uri = "USE_LOCALDB"
+    uploaded_db = st.sidebar.file_uploader("Upload SQLite DB file", type=["db", "sqlite"])
 elif radio_opt.index(selected_opt) == 2:  # MongoDB
     db_uri = "USE_MONGODB"
     mongo_uri = st.sidebar.text_input("MongoDB Connection String (SRV or normal):")
@@ -93,11 +107,19 @@ llm = ChatOpenAI(model="gpt-4o", temperature=0)
 
 # -----------------------Configure SQL Database----------------------------------------
 @st.cache_resource(ttl="2h")
-def configure_db(db_uri, mysql_host=None, mysql_user=None, mysql_password=None, mysql_db=None):
+def configure_db(db_uri, mysql_host=None, mysql_user=None, mysql_password=None, mysql_db=None,uploaded_db=None):
     if db_uri == "USE_LOCALDB":
-        dbfilepath = (Path(__file__).parent / "student.db").absolute()
-        creator = lambda: sqlite3.connect(f"file:{dbfilepath}?mode=ro", uri=True)
-        return SQLDatabase(create_engine("sqlite:///", creator=creator))
+        if not uploaded_db:
+            st.error("Please upload the Database.")
+            st.stop()
+        
+        import tempfile
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".db") as tmp_file:
+            tmp_file.write(uploaded_db.getbuffer())
+            tmp_path = tmp_file.name
+        engine = create_engine(f"sqlite:///{tmp_path}")
+        return SQLDatabase(engine)
+        
     elif db_uri == "USE_MYSQL":
         if not (mysql_host and mysql_user and mysql_password and mysql_db):
             st.error("Please provide all MySQL connection details.")
@@ -108,15 +130,11 @@ def configure_db(db_uri, mysql_host=None, mysql_user=None, mysql_password=None, 
         return SQLDatabase(engine)
 
 # --------------------Connect to the Database------------------------------------------
-db = None
-collection = None
-df = None
-agent = None
 
 if radio_opt.index(selected_opt) == 0:  # MySQL
     db = configure_db(db_uri, mysql_host, mysql_user, mysql_password, mysql_db)
 elif radio_opt.index(selected_opt) == 1:  # SQLite
-    db = configure_db(db_uri)
+    db = configure_db(db_uri, uploaded_db=uploaded_db)
 elif radio_opt.index(selected_opt) == 2:  # MongoDB
     if not (mongo_uri and mongo_db and mongo_collection_name):
         st.error("Please provide MongoDB connection details.")
@@ -142,14 +160,19 @@ else:  # Excel/CSV
     )
 
 # -------------------Create SQL Toolkit and Agent--------------------------------------
-if radio_opt.index(selected_opt) in [0, 1]:  # MySQL or SQLite
+if radio_opt.index(selected_opt) in [0, 1] and db is not None:  # MySQL or SQLite
     toolkit = SQLDatabaseToolkit(db=db, llm=llm)
     agent = create_sql_agent(
         llm=llm,
         toolkit=toolkit,
         verbose=True,
         handle_parsing_errors=True,
-        agent_type=AgentType.ZERO_SHOT_REACT_DESCRIPTION
+        agent_type=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+        agent_kwargs={"prefix": "You are a helpful data assistant with access to an SQL database.\n"
+            "Answer all questions using the database.\n"
+            "Return only the final answer clearly in plain English.\n"
+            "If the result has multiple rows or columns, present it as a clean table.\n"
+            "Do NOT include 'Thought:', 'Action:', or 'Observation:' in your answer."}
     )
 
 # ----------------Display the Output---------------------------------------------------
@@ -172,14 +195,21 @@ if user_query:
         st_cb = StreamlitCallbackHandler(st.container())
         try:
             if radio_opt.index(selected_opt) in [0, 1] or df is not None:
-                # messages = [system_prompt, HumanMessage(content=user_query)]
-                #response = agent.run(messages, callbacks=[st_cb])
                 response = agent.run(user_query, callbacks=[st_cb])
             elif radio_opt.index(selected_opt) == 2 and collection is not None:
-                # MongoDB handling
-                docs = list(collection.find({}).limit(100))  # limit for safety
+                docs = list(collection.find({}).limit(100))
                 data_str = "\n".join([str(doc) for doc in docs])
-                prompt = f"You are a helpful assistant. Here is the data from MongoDB:\n{data_str}\nAnswer the user query: {user_query}"
+                prompt = f"""
+                You are a helpful data assistant. You have access to the following MongoDB collection data:
+                
+                {data_str}
+                
+                Answer the user's question based **only on this data**. 
+                Do not give instructions or explanations about MongoDB commands.
+                Return the answer clearly. 
+                If the answer has multiple rows/columns, display it as a clean table.
+                User's question: {user_query}
+                """
                 answer = llm([HumanMessage(content=prompt)])
                 response = answer.content
             else:

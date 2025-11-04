@@ -9,8 +9,8 @@ load_dotenv()
 # API keys
 os.environ['HF_TOKEN'] = os.getenv("HF_TOKEN")
 os.environ['OPENAI_API_KEY'] = os.getenv("OPENAI_API_KEY")
-os.environ["GOOGLE_API_KEY"] = os.getenv("OPENAI_API_KEY")
-os.environ["GOOGLE_CSE_ID"] = os.getenv("OPENAI_API_KEY")
+os.environ["GOOGLE_API_KEY"] = os.getenv("GOOGLE_API_KEY")
+os.environ["GOOGLE_CSE_ID"] = os.getenv("GOOGLE_CSE_ID")
 
 # ----------------------------------------------------------
 # Imports
@@ -128,20 +128,7 @@ st.markdown("<hr style='margin: 15px 0;'>", unsafe_allow_html=True)
 
 model_global = ChatOpenAI(model="gpt-4o")
 
-if "tools" not in st.session_state:
-    st.session_state.tools = []
-if "graph" not in st.session_state:
-    st.session_state.graph = None
-if "uploaded_files" not in st.session_state:
-    st.session_state.uploaded_files = []
-if "generic_url" not in st.session_state:
-    st.session_state.generic_url = ""
-if "chat_history" not in st.session_state:
-    st.session_state.chat_history = []
-if "thread_id" not in st.session_state:
-    st.session_state.thread_id = "chat-thread-1"
-if "user_input" not in st.session_state:
-    st.session_state.user_input = ""
+
 
 # ----------------------------------------------------------
 # Sidebar: Additional Tools
@@ -167,7 +154,6 @@ st.sidebar.info("✅ These tools will be bound with the PDF retriever tool autom
 # ----------------------------------------------------------
 
 def create_vector_embedding():
-
     if st.session_state.uploaded_files:
         os.makedirs("Data", exist_ok=True)
         for file in st.session_state.uploaded_files:
@@ -178,7 +164,11 @@ def create_vector_embedding():
         docs = loader.load()
     
     elif st.session_state.generic_url:
-        docs = WebBaseLoader(st.session_state.generic_url).load()
+        try:
+            docs = WebBaseLoader(st.session_state.generic_url).load()
+        except Exception as e:
+            st.error(f"⚠️ Failed to load the URL..")
+            st.stop()
 
     splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=50)
     final_docs = splitter.split_documents(docs)
@@ -228,11 +218,10 @@ def create_vector_embedding():
         tools_list.append(
             Tool(name="Arxiv_Search", 
                  func=arxiv.run,description=(
-                "Use this tool to fetch exact content, abstracts, and summaries "
-                "from scientific papers on Arxiv. Always use this tool to answer "
-                "user questions about scientific papers, including titles, authors, "
-                "abstracts, and contributions. Do not rely on your own knowledge; "
-                "fetch directly from the Arxiv tool when the user asks about any paper.")))
+                "Use this tool to fetch abstracts, summaries, or details from scientific papers on arXiv. "
+                "Always use this tool when the user asks about, references, or mentions any research paper, "
+                "including requests to summarize, explain, compare, or find authors/titles of scientific papers. "
+                "Do not answer from your own knowledge — call this tool directly for all paper-related queries.")))
 
     if "Weather" in selected_tool_names:
         tools_list.append(
@@ -257,7 +246,6 @@ def build_Graph():
         messages: Annotated[list[AnyMessage], add_messages]
 
     def agent(state: State):
-        print("🧩 Node: Entering agent Node")
         """
         Invokes the agent to generate a response based on the current state.
         Given the question, it will decide to retrieve using the retriever tool, or simply end.
@@ -268,14 +256,13 @@ def build_Graph():
         Returns:
         dict: The updated state with the agent response appended to the messages
         """
-
+        print("🧩 Node: Entering agent Node")
         model_with_tools = model_global.bind_tools(tools)
         response = model_with_tools.invoke(state["messages"])
         print("response from agent : ",response)
         return {"messages": [response]}
 
     def grade_documents(state: State) -> Literal["generate", "rewrite"]:
-        print("🧩 Node: Entering grade_documents")
         """
         Determines whether the retrieved documents are relevant to the question.
     
@@ -285,7 +272,7 @@ def build_Graph():
         Returns:
         str: A decision for whether the documents are relevant or not
         """
-
+        print("🧩 Node: Entering grade_documents")
         class Grade(BaseModel):
             binary_score: str = Field(description="Relevance score 'yes' or 'no'")
 
@@ -308,8 +295,6 @@ def build_Graph():
             if isinstance(msg, HumanMessage):
                 question = msg.content
                 break
-
-        #print("state message:",state["messages"])
         
         print("Context for this particular question:",messages[-1].content)
         
@@ -329,7 +314,6 @@ def build_Graph():
             return "rewrite"
 
     def generate(state: State):
-        print("🧩 Node: Entering generate")
         """
         Generate the answer
     
@@ -339,6 +323,7 @@ def build_Graph():
         Returns:
         str: The updated Message
         """
+        print("🧩 Node: Entering generate")
         messages = state["messages"]
 
         for msg in reversed(messages):
@@ -355,7 +340,6 @@ def build_Graph():
         return {"messages": [response]}
 
     def rewrite(state: State):
-        print("🧩 Node: Entering rewrite")
         """ 
         Transform the query to produce a better question.
     
@@ -365,6 +349,7 @@ def build_Graph():
         Returns:
         str: The updated state with rephrased question
         """
+        print("🧩 Node: Entering rewrite")
         messages = state["messages"]
 
         for msg in reversed(messages):
@@ -402,21 +387,24 @@ def build_Graph():
 # ----------------------------------------------------------
 # Execute Pipeline
 # ----------------------------------------------------------
-# st.write(" Upload a PDF or Website URL and choose tools to start interacting with your Smart PDF Assistant.")
-if uploaded_files:
-    st.session_state.uploaded_files = uploaded_files
-if generic_url:
-    st.session_state.generic_url = generic_url
     
-if submit_clicked and (st.session_state.uploaded_files or st.session_state.generic_url):
-    for f in os.listdir("Data"): os.remove(os.path.join("Data", f))
-    with st.spinner("Processing and setting up tools..."):
-        create_vector_embedding()
-        # Ensure tools exist before graph
-        if "tools" not in st.session_state or not st.session_state.tools:
-            st.error("⚠️ Tools could not be created. Please check your file uploads or selections.")
-        else:
-            build_Graph()
+if submit_clicked:
+    st.session_state.tools = []
+    st.session_state.graph = None
+    st.session_state.chat_history = []
+    st.session_state.thread_id = "chat-thread-1"
+    st.session_state.graph_prompted = False
+    st.session_state.uploaded_files = uploaded_files or []
+    st.session_state.generic_url = generic_url or ""
+
+    if st.session_state.uploaded_files or st.session_state.generic_url:
+        with st.spinner("Processing and setting up tools..."):
+            create_vector_embedding()
+            # Ensure tools exist before graph
+            if "tools" not in st.session_state or not st.session_state.tools:
+                st.error("⚠️ Tools could not be created. Please check your file uploads or selections.")
+            else:
+                build_Graph()
 
     if not st.session_state.get("graph_prompted"):
         st.session_state.chat_history.append({"role": "assistant", "content": "Hello! How can I assist you today?"})
@@ -448,6 +436,3 @@ for msg in st.session_state.get("chat_history", []):
     if isinstance(msg, dict) and "content" in msg and "role" in msg:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
-#for msg in st.session_state.chat_history:
-    #with st.chat_message(msg["role"]):
-        # st.markdown(msg["content"])

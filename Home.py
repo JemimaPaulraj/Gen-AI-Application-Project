@@ -3,25 +3,12 @@ from PIL import Image
 
 st.set_page_config(page_title=" Home ", layout="wide")
 
-# Create columns with relative widths
-col1, col2 = st.columns([3, 1])  # You can adjust the width ratio
-
-with col1:
-    st.markdown(
-        "<h1 style='text-align: center; font-size: 30px; white-space: nowrap;'>Generative AI Applications</h1>",
-        unsafe_allow_html=True
-    )
-
+st.markdown(
+    "<h1 style='text-align: center; font-size: 30px;'>Generative AI Applications</h1>",
+    unsafe_allow_html=True
+)
 # Spacer
 st.markdown("<hr style='margin: 20px 0;'>", unsafe_allow_html=True)
-# Create two columns
-col1, col2 = st.columns([2, 2])  # Adjust ratio as needed
-
-# Add custom CSS to style the placeholder font size
-st.markdown("<style>.stTextInput input::placeholder {font-size: 14px;}</style>", unsafe_allow_html=True)
-with col1:
-    # Dropdown in the first column
-    input_text = st.text_input("Groq API", type="password", placeholder="Enter your Groq API")
 
 st.markdown(
     """
@@ -62,7 +49,7 @@ with st.container():
             st.switch_page("pages/1_AI ChatBot.py")
 
     with col2:
-        st.markdown("##### 🔍 AI Document Search")
+        st.markdown("##### 🔍 Agentic RAG")
         st.markdown('<p style="color: grey; font-size: 14px; ">Search using AI-powered retrieval.</p>', unsafe_allow_html=True)
         if st.button("Retrieval Augmented Generation (RAG)"):
             st.switch_page("pages/2_Agentic RAG.py")
@@ -71,7 +58,7 @@ with st.container():
         st.markdown("##### 📝 Text Summarizer")
         st.markdown('<p style="color: grey; font-size: 14px; ">Turn long text into clear, concise summaries.</p>', unsafe_allow_html=True)
         if st.button("Text Summarization"):
-            st.switch_page("pages/Text Summarization.py")
+            st.switch_page("pages/3_Text Summarization.py")
 
 # Spacer
 st.markdown("<hr style='margin: 20px 0;'>", unsafe_allow_html=True)
@@ -82,8 +69,8 @@ with st.container():
     with col4:
         st.markdown("##### 🗄️ Query SQL / NOSQL")
         st.markdown('<p style="color: grey; font-size: 14px; ">Create images from your imagination using text.</p>', unsafe_allow_html=True)
-        if st.button("Image Generation"):
-            st.switch_page("pages/Query SQL|NOSQL.py")
+        if st.button(" Query SQL / NOSQL "):
+            st.switch_page("pages/4_Query SQL and NOSQL.py")
 
     with col5:
         st.markdown("##### 🎨 Image Generator")

@@ -31,7 +31,6 @@ div.stButton > button:hover {
 """, unsafe_allow_html=True)
 
 st.markdown('<div class="custom-heading">BLIP Image Captioning 📝</div>', unsafe_allow_html=True)
-#st.markdown('<p style="color: grey; font-size: 14px; text-align: center;">📷 Upload an image and let BLIP describe it in words !</p>',unsafe_allow_html=True)
 st.markdown("<hr style='margin: 15px 0;'>", unsafe_allow_html=True)
 
 # -----------------------------
@@ -81,4 +80,3 @@ if uploaded_file:
                 caption = processor.decode(out[0], skip_special_tokens=True)
             st.markdown("<h4>📝 Generated Caption:</h4>", unsafe_allow_html=True)
             st.success(caption)
-            #st.write(caption)

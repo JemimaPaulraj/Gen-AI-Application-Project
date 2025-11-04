@@ -124,11 +124,9 @@ with output_col:
                             docs = None
         
                     else:
-                        # Generic website
-                        st.write("entered else")
                         try:
                             loader = UnstructuredURLLoader(
-                                urls=[generic_url_value],
+                                urls=[generic_url],
                                 ssl_verify=False,
                                 headers={"User-Agent": "Mozilla/5.0"}
                             )
@@ -172,4 +170,3 @@ with output_col:
             st.success(output_summary)
         else:
             st.warning("No valid input source provided. Please upload a PDF, enter a URL, or paste text.")
-
