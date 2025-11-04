@@ -52,10 +52,10 @@ with col1:
 
 
 with col2:
-    Image_Size = st.selectbox("***Image Size***", ["256x256","512x512", "768x768", "1024x1024"])
+    Image_Size = st.selectbox("***Image Size***", ["256x256","512x512"])
 
 with col3:
-    Number_of_Images = st.slider("***Number of Images***", min_value=1, max_value=5, value=1, step=1)
+    Number_of_Images = st.slider("***Number of Images***", min_value=1, max_value=3, value=1, step=1)
 
 #spacer 
 st.markdown("<hr style='margin: 15px 0;'>", unsafe_allow_html=True)
@@ -74,6 +74,16 @@ model_map = {
     "Stable Diffusion v1.5": "runwayml/stable-diffusion-v1-5",
     "Dreamlike Photoreal 2.0": "dreamlike-art/dreamlike-photoreal-2.0",
 }
+#---------------------------------------------------------------------------------------------------------------
+# Cache Model Loading for faster reloads
+@st.cache_resource
+def load_pipeline(model_id, device):
+    pipe = StableDiffusionPipeline.from_pretrained(
+        model_id,
+        torch_dtype = torch.float16 if device=="cuda" else torch.float32
+    )
+    return pipe.to(device)
+
 #---------------------------------------------------------------------------------------------------------------
                                 # Model Pipeline
 
@@ -94,17 +104,13 @@ def generate_images(pipe, prompt, params):
 
 # generating images
 if summarize_clicked and User_Prompt.strip():
-    with st.spinner("Generating Images..."):
+    with st.spinner("Generating Images, It may take some time..."):
         model_id = model_map[model]
         device = "cuda" if torch.cuda.is_available() else "cpu"
         st.write(f"Running on: {device.upper()}")
-        pipe = StableDiffusionPipeline.from_pretrained(
-        model_id, 
-        torch_dtype=torch.float16 if device=="cuda" else torch.float32
-        )
-        pipe = pipe.to(device)
+        pipe = load_pipeline(model_id, device)
         params = {
-            "num_inference_steps": 50,
+            "num_inference_steps": 30,
             "num_images_per_prompt": Number_of_Images
         }
         generate_images(pipe, User_Prompt, params)

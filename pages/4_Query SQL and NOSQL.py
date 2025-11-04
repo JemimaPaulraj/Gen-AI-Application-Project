@@ -86,7 +86,7 @@ selected_opt = st.sidebar.radio("Choose the DB you want to chat with:", options=
 # Sidebar credentials    
 if radio_opt.index(selected_opt) == 0:  # MySQL
     db_uri = "USE_MYSQL"
-    mysql_host = st.sidebar.text_input("Enter MySQL Host:")
+    mysql_host = st.sidebar.text_input("Enter MySQL Host:",type="password")
     mysql_user = st.sidebar.text_input("User Name:")
     mysql_password = st.sidebar.text_input("Password:", type="password")
     mysql_db = st.sidebar.text_input("Database Name:")
@@ -132,16 +132,29 @@ def configure_db(db_uri, mysql_host=None, mysql_user=None, mysql_password=None, 
 # --------------------Connect to the Database------------------------------------------
 
 if radio_opt.index(selected_opt) == 0:  # MySQL
-    db = configure_db(db_uri, mysql_host, mysql_user, mysql_password, mysql_db)
+    try:
+        db = configure_db(db_uri, mysql_host, mysql_user, mysql_password, mysql_db)
+    except Exception as e:
+        st.error(f"Failed to connect to MySQL database.")
+        st.stop()
 elif radio_opt.index(selected_opt) == 1:  # SQLite
-    db = configure_db(db_uri, uploaded_db=uploaded_db)
+    try:
+        db = configure_db(db_uri, uploaded_db=uploaded_db)
+    except Exception as e:
+        st.error(f"Failed to connect to SQLite database.")
+        st.stop()
 elif radio_opt.index(selected_opt) == 2:  # MongoDB
     if not (mongo_uri and mongo_db and mongo_collection_name):
         st.error("Please provide MongoDB connection details.")
         st.stop()
-    client = MongoClient(mongo_uri)
-    db_mongo = client[mongo_db]
-    collection = db_mongo[mongo_collection_name]
+    try:
+        client = MongoClient(mongo_uri)
+        client.admin.command('ping')
+        db_mongo = client[mongo_db]
+        collection = db_mongo[mongo_collection_name]
+    except Exception as e:
+        st.error(f"Failed to connect to MongoDB.")
+        st.stop()
 else:  # Excel/CSV
     if uploaded_file is None:
         st.error("Please upload a file.")
@@ -168,12 +181,14 @@ if radio_opt.index(selected_opt) in [0, 1] and db is not None:  # MySQL or SQLit
         verbose=True,
         handle_parsing_errors=True,
         agent_type=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
-        agent_kwargs={"prefix": "You are a helpful data assistant with access to an SQL database.\n"
-            "Answer all questions using the database.\n"
-            "Return only the final answer clearly in plain English.\n"
-            "If the result has multiple rows or columns, present it as a clean table.\n"
-            "Do NOT include 'Thought:', 'Action:', or 'Observation:' in your answer."}
-    )
+        agent_kwargs={
+            "prefix": (
+                "You are a helpful data assistant with access to an SQL database.\n"
+                "Answer all questions using the database.\n"
+                "Return only the final answer clearly in plain English.\n"
+                "If you do not know the answer, say 'I don't know'."
+            )},
+        agent_executor_kwargs={ "handle_parsing_errors": True })
 
 # ----------------Display the Output---------------------------------------------------
 # Clear message history
@@ -193,9 +208,18 @@ if user_query:
 
     with st.chat_message("assistant"):
         st_cb = StreamlitCallbackHandler(st.container())
+        response = None
         try:
             if radio_opt.index(selected_opt) in [0, 1] or df is not None:
-                response = agent.run(user_query, callbacks=[st_cb])
+                max_retries = 3
+                for attempt in range(max_retries):
+                    try:
+                        response = agent.run(user_query, callbacks=[st_cb])
+                        break 
+                    except Exception as e:
+                        if attempt == max_retries - 1:
+                            st.error(f"Please reframe the question and Try again..")
+
             elif radio_opt.index(selected_opt) == 2 and collection is not None:
                 docs = list(collection.find({}).limit(100))
                 data_str = "\n".join([str(doc) for doc in docs])
@@ -215,8 +239,9 @@ if user_query:
             else:
                 response = "No database connected."
             
-            st.session_state.messages.append({'role': 'assistant', 'content': response})
-            st.write(response)
+            if response is not None:
+                st.session_state.messages.append({'role': 'assistant', 'content': response})
+                st.write(response)
 
         except Exception as e:
             st.error(f"Error: {str(e)}")
