@@ -168,7 +168,9 @@ This project is a multi-functional Generative AI application built with Streamli
 
 
 **How it works**:
-- **Model**: Uses Stable Diffusion pipelines - Segmind Small-SD (Light weight)
+- **Model**: Uses Stable Diffusion pipelines - Stable Diffusion v1.5, Dreamlike Photoreal 2.0
+- Run the Image Generation in Local because Stable Diffusion models require significant memory and may cause memory overload on Streamlit Cloud.
+
 - **Process**:
   1. Text prompt encoded into latent space
   2. Iterative denoising (30 steps)
