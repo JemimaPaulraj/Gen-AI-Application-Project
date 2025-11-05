@@ -139,6 +139,10 @@ with output_col:
         elif input_text:
             docs = [Document(page_content=input_text)]
 
+        if docs:
+            for i, doc in enumerate(docs):
+                docs[i].page_content = " ".join(doc.page_content.split()[:1000])
+
         # Run summarization if docs are loaded
         if docs:
             prompt_template = f"""
