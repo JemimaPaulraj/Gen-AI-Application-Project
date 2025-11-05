@@ -106,6 +106,7 @@ def generate_images(pipe, prompt, params):
 if summarize_clicked and User_Prompt.strip():
     with st.spinner("Generating Images, It may take some time..."):
         st.error("⚠️ Please run image generation locally with GPU. Stable Diffusion models require significant memory and may cause memory overload on Streamlit Cloud.") # remove this line when running in local
+        st.stop()
         model_id = model_map[model]
         device = "cuda" if torch.cuda.is_available() else "cpu"
         st.write(f"Running on: {device.upper()}")
