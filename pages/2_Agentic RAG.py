@@ -170,9 +170,8 @@ def create_vector_embedding():
             st.error(f"⚠️ Failed to load the URL..")
             st.stop()
 
-    splitter = RecursiveCharacterTextSplitter(chunk_size=300, chunk_overlap=50)
+    splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=50)
     final_docs = splitter.split_documents(docs)
-    final_docs = final_docs[:10] # Take only first 10 chunks to avoid too large input
 
     embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-V2")
     db = FAISS.from_documents(final_docs, embeddings)
