@@ -4,6 +4,12 @@ import streamlit as st
 import matplotlib.pyplot as plt
 from diffusers import StableDiffusionPipeline  # it comes from Hugging Face diffusers library to generate image to text.
 
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
+# API keys
+HF_TOKEN = os.getenv("HF_TOKEN")
 #---------------------------------------------------------------------------------------------------------------
 st.set_page_config(page_title=" Image Generator ", layout="wide")
 # Styling the heading
@@ -71,7 +77,7 @@ with col2:
     summarize_clicked = st.button("Generate")
 
 model_map = {
-    "Stable Diffusion v1.5": "runwayml/stable-diffusion-v1-5" }
+    "Stable Diffusion v1.5": "segmind/small-sd" }
 #---------------------------------------------------------------------------------------------------------------
 @st.cache_resource
 def load_pipeline(model_id, device):
@@ -80,6 +86,7 @@ def load_pipeline(model_id, device):
         pipe = StableDiffusionPipeline.from_pretrained(
             model_id,
             torch_dtype=dtype,
+            use_auth_token=HF_TOKEN,
             low_cpu_mem_usage=True
         )
         return pipe.to(device)
@@ -114,6 +121,7 @@ if summarize_clicked and User_Prompt.strip():
         pipe = load_pipeline(model_id, device)
         params = {
             "num_inference_steps": 20,
+            "guidance_scale": 7.5, 
             "num_images_per_prompt": Number_of_Images
         }
         generate_images(pipe, User_Prompt, params)
