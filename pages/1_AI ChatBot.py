@@ -46,9 +46,6 @@ st.markdown("""
 st.markdown('<div class="custom-heading">1 . AI Chatbot🔍📝</div>', unsafe_allow_html=True)
 st.markdown("<hr style='margin: 15px 0;'>", unsafe_allow_html=True)
 
-# Description with Simple Icons
-# write some content
-#st.markdown('<p style="color: black; font-size: 16px; ">***🤖 Ask away , your smart little helper is here 24/7!***</p>', unsafe_allow_html=True)
 st.write("***🤖 Ask away , your smart little helper is here 24/7 !***")
 
 # Spacer
@@ -86,7 +83,7 @@ if user_input:
     User question: {user_question}
     """
     prompt = ChatPromptTemplate.from_template(template)
-    llm = ChatOpenAI(model="gpt-4o")  # You can set streaming=True if your LLM supports it
+    llm = ChatOpenAI(model="gpt-4o")
 
     # Build the chain and get streaming response
     chain = prompt | llm
