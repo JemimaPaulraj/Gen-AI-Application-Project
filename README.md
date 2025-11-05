@@ -2,6 +2,11 @@
 
 This project is a multi-functional Generative AI application built with Streamlit and powered by featuring six powerful Generative AI capabilities: AI Chatbot, Agentic RAG, Text Summarization, Database Querying, Image Generation, and Image Captioning.
 
+**Web App Link** : https://generative-ai-application-jemimapaulraj.streamlit.app/
+
+<img width="3047" height="1471" alt="image" src="https://github.com/user-attachments/assets/66f6f9c5-bc81-4f9b-bbcb-f4b472174816" />
+
+
 ## Features Overview 
 
 1. AI Chatbot 💬 : Interactive conversational AI assistant for general questions and tasks
