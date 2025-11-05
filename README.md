@@ -4,10 +4,8 @@ This project is a multi-functional Generative AI application built with Streamli
 
 **Web App Link** : https://generative-ai-application-jemimapaulraj.streamlit.app/
 
+
 <img width="975" height="502" alt="image" src="https://github.com/user-attachments/assets/c747b6d0-f5ee-4a74-a291-01e8a7e8c9c0" />
-
-<img width="3047" height="1471" alt="image" src="https://github.com/user-attachments/assets/77f675d8-2ae3-4bdb-a523-2aad407a74c7" />
-
 
 
 ## Features Overview 
@@ -23,6 +21,8 @@ This project is a multi-functional Generative AI application built with Streamli
 ### 1. AI Chatbot 💬
 
 **Purpose**: Interactive AI assistant powered by OpenAI GPT-4o. Maintains context-aware conversations with real-time streaming responses in a clean, intuitive interface.
+
+<img width="975" height="503" alt="image" src="https://github.com/user-attachments/assets/aabad83c-d7c7-4431-a0d6-06235b197ec7" />
 
 **How it works**:
 - Uses OpenAI GPT-4o to interpret user queries and generate relevant responses.
@@ -40,6 +40,9 @@ This project is a multi-functional Generative AI application built with Streamli
 ### 2. Agentic RAG 🔍
 
 **Purpose**: Intelligent document retrieval & Q&A with multiple context-aware agents for tool selection, document fetching, relevance scoring, and query refinement via LangGraph—integrated with external tools for up-to-date information.
+
+<img width="975" height="502" alt="image" src="https://github.com/user-attachments/assets/1615599d-44b9-438a-ad1c-fe863eca3499" />
+
 
 **How it works**:
 - **Document Processing**: Uploads PDFs or scrapes websites
@@ -79,6 +82,8 @@ This project is a multi-functional Generative AI application built with Streamli
 
 **Purpose**: AI-powered text summarization that condenses documents or articles into concise, easy-to-read summaries using various chain types (Stuff, Map-Reduce, Refine), while allowing control over style and length.
 
+<img width="975" height="503" alt="image" src="https://github.com/user-attachments/assets/352933a0-a254-4be5-978c-eabe7a46c350" />
+
 **How it works**:
 - **Input Processing**: Handles multiple input types like Youtube URL, Website URL, PDF uploads, Text
 - **Chain Types**:
@@ -110,6 +115,9 @@ This project is a multi-functional Generative AI application built with Streamli
 ### 4. Query SQL/NoSQL 🗄️
 
 **Purpose**: Provides a natural language interface for querying and analyzing structured and semi-structured data across SQL, NoSQL, and spreadsheet formats, enabling fast insights, reporting, and exploration without writing code.
+
+<img width="975" height="503" alt="image" src="https://github.com/user-attachments/assets/67bfbb69-aabe-493a-b78d-54ff76414cb2" />
+
 
 **How it works**:
 - **Supported Databases**: MySQL, SQLite, MongoDB, Excel/CSV
@@ -156,6 +164,8 @@ This project is a multi-functional Generative AI application built with Streamli
 
 **Purpose**: Generate beautiful images from text descriptions using light weight Stable Diffusion models
 
+<img width="975" height="494" alt="image" src="https://github.com/user-attachments/assets/1021eda4-ed52-40b9-b67b-b40e83bdb68d" />
+
 
 **How it works**:
 - **Model**: Uses Stable Diffusion pipelines - Segmind Small-SD (Light weight)
@@ -185,6 +195,9 @@ This project is a multi-functional Generative AI application built with Streamli
 ### 6. Image Captioning 🖼️
 
 **Purpose**: Generate descriptive text captions for images.
+
+<img width="975" height="502" alt="image" src="https://github.com/user-attachments/assets/d0e89526-60b8-4bbb-98de-68b1ba968837" />
+
 
 **How it works**:
 - **Model**: Salesforce BLIP (Bootstrapping Language-Image Pre-training)
