@@ -1,9 +1,18 @@
-# Import Necessary packages
-import torch # Imports PyTorch library for tensor operations and GPU acceleration
+# ==========================================================
+# 🖼️ Image Generator (Streamlit Cloud Safe - CPU Only)
+# ==========================================================
+import os
+from dotenv import load_dotenv
+load_dotenv()
+os.environ["STREAMLIT_WATCH_FILES"] = "false"
+
+import torch
 import streamlit as st
 import matplotlib.pyplot as plt
-from diffusers import StableDiffusionPipeline  # it comes from Hugging Face diffusers library to generate image to text.
+from diffusers import StableDiffusionPipeline
 
+# API keys
+HF_TOKEN = os.getenv("HF_TOKEN")
 #---------------------------------------------------------------------------------------------------------------
 st.set_page_config(page_title=" Image Generator ", layout="wide")
 # Styling the heading
@@ -48,14 +57,14 @@ st.markdown("<hr style='margin: 15px 0;'>", unsafe_allow_html=True)
 # Get the input model name from user
 col1, col2, col3= st.columns([1, 1, 1])
 with col1:
-    model = st.selectbox("***Model***", ["Stable Diffusion v1.5","Dreamlike Photoreal 2.0"])
+    model = st.selectbox("***Model***", ["Segmind Small-SD"])
 
 
 with col2:
     Image_Size = st.selectbox("***Image Size***", ["256x256","512x512"])
 
 with col3:
-    Number_of_Images = st.slider("***Number of Images***", min_value=1, max_value=3, value=1, step=1)
+    Number_of_Images = st.slider("***Number of Images***", min_value=1, max_value=2, value=1, step=1)
 
 #spacer 
 st.markdown("<hr style='margin: 15px 0;'>", unsafe_allow_html=True)
@@ -68,21 +77,24 @@ with col1:
 with col2:
     for _ in range(5):
         st.write("")
-    summarize_clicked = st.button("Generate")
+    Generate_clicked = st.button("Generate")
 
 model_map = {
-    "Stable Diffusion v1.5": "runwayml/stable-diffusion-v1-5",
-    "Dreamlike Photoreal 2.0": "dreamlike-art/dreamlike-photoreal-2.0",
-}
+    "Segmind Small-SD": "segmind/small-sd" }
 #---------------------------------------------------------------------------------------------------------------
-# Cache Model Loading for faster reloads
 @st.cache_resource
-def load_pipeline(model_id, device):
-    pipe = StableDiffusionPipeline.from_pretrained(
-        model_id,
-        torch_dtype = torch.float16 if device=="cuda" else torch.float32
-    )
-    return pipe.to(device)
+def load_pipeline(model_id):
+    try:
+        pipe = StableDiffusionPipeline.from_pretrained(
+            model_id,
+            torch_dtype=torch.float32,
+            token=HF_TOKEN,
+            low_cpu_mem_usage=True
+        )
+        return pipe.to("cpu")
+    except Exception as e:
+        st.error(f"⚠️ Failed to load model due to memory overload in streamlit cloud..")
+        return None
 
 #---------------------------------------------------------------------------------------------------------------
                                 # Model Pipeline
@@ -103,14 +115,13 @@ def generate_images(pipe, prompt, params):
         st.image(small_img, caption="Generated Image", use_container_width=False)
 
 # generating images
-if summarize_clicked and User_Prompt.strip():
+if Generate_clicked and User_Prompt.strip():
     with st.spinner("Generating Images, It may take some time..."):
         model_id = model_map[model]
-        device = "cuda" if torch.cuda.is_available() else "cpu"
-        st.write(f"Running on: {device.upper()}")
-        pipe = load_pipeline(model_id, device)
+        pipe = load_pipeline(model_id)
         params = {
             "num_inference_steps": 30,
+            "guidance_scale": 7.5, 
             "num_images_per_prompt": Number_of_Images
         }
         generate_images(pipe, User_Prompt, params)
