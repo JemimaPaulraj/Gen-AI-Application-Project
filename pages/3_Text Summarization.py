@@ -141,7 +141,7 @@ with output_col:
 
         if docs:
             for i, doc in enumerate(docs):
-                docs[i].page_content = " ".join(doc.page_content.split()[:1000])
+                docs[i].page_content = " ".join(doc.page_content.split()[:2000])
 
         # Run summarization if docs are loaded
         if docs:
