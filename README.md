@@ -4,7 +4,8 @@ This project is a multi-functional Generative AI application built with Streamli
 
 **Web App Link** : https://generative-ai-application-jemimapaulraj.streamlit.app/
 
-# <img width="3047" height="1471" alt="image" src="https://github.com/user-attachments/assets/66f6f9c5-bc81-4f9b-bbcb-f4b472174816" />
+<img width="975" height="502" alt="image" src="https://github.com/user-attachments/assets/c747b6d0-f5ee-4a74-a291-01e8a7e8c9c0" />
+
 <img width="3047" height="1471" alt="image" src="https://github.com/user-attachments/assets/77f675d8-2ae3-4bdb-a523-2aad407a74c7" />
 
 
